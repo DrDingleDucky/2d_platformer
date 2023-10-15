@@ -33,7 +33,6 @@ public:
         rect.setFillColor(color);
         rect.setSize(size);
         rect.setPosition(pos);
-
         rectTop.setSize(sf::Vector2f(rect.getSize().x, 1.0f));
         rectTop.setPosition(sf::Vector2f(rect.getPosition().x, rect.getPosition().y));
     }
@@ -71,7 +70,7 @@ public:
     {
         rectBottom.setPosition(sf::Vector2f(rect.getPosition().x, rect.getPosition().y + rect.getSize().y - 1.0f));
 
-        CollisionOneWayTile(oneWayTileGroup);
+        collisionOneWayTile(oneWayTileGroup);
         horizontalMovement(deltaTime);
         horizontalCollisionsSolidTile(solidTileGroup);
         verticalMovement(deltaTime);
@@ -103,7 +102,7 @@ private:
     sf::RectangleShape rect;
     sf::RectangleShape rectBottom;
 
-    void CollisionOneWayTile(std::vector<OneWayTile>& oneWayTileGroup)
+    void collisionOneWayTile(std::vector<OneWayTile>& oneWayTileGroup)
     {
         for (auto& tile : oneWayTileGroup)
         {
@@ -121,54 +120,30 @@ private:
 
     void horizontalMovement(float deltaTime)
     {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-        {
-            if (direction.x > 0.0f)
-            {
-                direction.x -= acceleration * deltaTime;
-            }
-            else if (direction.x < 0.0f)
-            {
-                direction.x += acceleration * deltaTime;
-            }
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && !sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         {
             direction.x -= acceleration * deltaTime;
         }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && !sf::Keyboard::isKeyPressed(sf::Keyboard::A))
         {
             direction.x += acceleration * deltaTime;
         }
         else
         {
-            if (direction.x > 0.0f)
+            int sign = direction.x > 0 ? -1 : 1;
+
+            if (sign * direction.x < 0.0f)
             {
-                direction.x -= acceleration * deltaTime;
-                if (direction.x < 0.0f)
-                {
-                    direction.x = 0.0f;
-                }
-            }
-            else if (direction.x < 0.0f)
-            {
-                direction.x += acceleration * deltaTime;
-                if (direction.x > 0.0f)
+                direction.x += sign * acceleration * deltaTime;
+                if (sign * direction.x > 0.0f)
                 {
                     direction.x = 0.0f;
                 }
             }
         }
 
-        if (direction.x > maxSpeed)
-        {
-            direction.x = maxSpeed;
-        }
-        else if (direction.x < -maxSpeed)
-        {
-            direction.x = -maxSpeed;
-        }
-
+        direction.x = std::clamp(direction.x, -maxSpeed, maxSpeed);
+        //std::cout << direction.x << "\n";
         rect.move(sf::Vector2f(direction.x * deltaTime, 0.0f));
     }
 
@@ -359,8 +334,7 @@ private:
     }
 };
 
-void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<SolidTile>& solidTileGroup,
-    std::vector<OneWayTile>& oneWayTileGroup)
+void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<SolidTile>& solidTileGroup, std::vector<OneWayTile>& oneWayTileGroup)
 {
     std::ifstream file(map);
     std::string line;
@@ -368,18 +342,18 @@ void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<So
     float x;
     float y;
 
-    float column_index = 0.0f;
+    unsigned int column_index = 0;
 
     while (std::getline(file, line))
     {
-        for (float row_index = 0.0f; row_index < line.length(); row_index++)
+        for (unsigned int row_index = 0; row_index < line.length(); row_index++)
         {
             x = row_index * 36.0f;
             y = column_index * 36.0f;
 
             if (line[row_index] == 't') // t - tile
             {
-                solidTileGroup.push_back(SolidTile(sf::Color(0.0f, 0.0f, 0.0f), sf::Vector2f(36.0f, 36.0f), sf::Vector2f(x, y)));
+                solidTileGroup.push_back(SolidTile(sf::Color(0, 0, 0), sf::Vector2f(36.0f, 36.0f), sf::Vector2f(x, y)));
             }
             else if (line[row_index] == 's') // s - small tile
             {
@@ -387,12 +361,12 @@ void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<So
             }
             else if (line[row_index] == 'o') // o - one way tile
             {
-                oneWayTileGroup.push_back(OneWayTile(sf::Color(139.0f, 69.0f, 19.0f), sf::Vector2f(36.0f, 9.0f), sf::Vector2f(x, y)));
+                oneWayTileGroup.push_back(OneWayTile(sf::Color(139, 69, 19), sf::Vector2f(36.0f, 9.0f), sf::Vector2f(x, y)));
             }
             else if (line[row_index] == 'p') // p - player
             {
                 playerGroup.push_back(Player(
-                    7675.0f,                    // player acceleration
+                    1000.0f,                    // player acceleration
                     405.0f,                     // player max speed
                     2175.0f,                    // player gravity
                     -850.0f,                    // player jump velocity
@@ -401,7 +375,7 @@ void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<So
                     1085.0f,                    // player max fall speed
                     0.1f,                       // player coyote time
                     0.12f,                      // player jump buffer time
-                    sf::Color::White,           // player color
+                    sf::Color(255, 255, 255),           // player color
                     sf::Vector2f(36.0f, 72.0f), // player size
                     sf::Vector2f(x, y)));       // player pos
             }
@@ -417,8 +391,7 @@ int main()
     int winHeight = 900;
 
     sf::RenderWindow window(sf::VideoMode(winWidth, winHeight), winTitle, sf::Style::Close);
-    window.setPosition(sf::Vector2i(sf::VideoMode::getDesktopMode().width / 2 - winWidth / 2,
-        sf::VideoMode::getDesktopMode().height / 2 - winHeight / 2));
+    window.setPosition(sf::Vector2i(sf::VideoMode::getDesktopMode().width / 2 - winWidth / 2, sf::VideoMode::getDesktopMode().height / 2 - winHeight / 2));
 
     std::vector<Player> playerGroup;
     std::vector<SolidTile> solidTileGroup;
