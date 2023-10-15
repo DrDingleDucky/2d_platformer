@@ -143,7 +143,6 @@ private:
         }
 
         direction.x = std::clamp(direction.x, -maxSpeed, maxSpeed);
-        //std::cout << direction.x << "\n";
         rect.move(sf::Vector2f(direction.x * deltaTime, 0.0f));
     }
 
