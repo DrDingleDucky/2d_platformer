@@ -8,14 +8,9 @@ class SolidTile
 {
 public:
     sf::RectangleShape rect;
-    SolidTile(
-        sf::Color color,
-        sf::Vector2f size,
-        sf::Vector2f pos)
+
+    SolidTile(sf::Color color, sf::Vector2f size, sf::Vector2f pos)
     {
-        this->color = color;
-        this->pos = pos;
-        this->size = size;
         rect.setFillColor(color);
         rect.setSize(size);
         rect.setPosition(pos);
@@ -25,11 +20,6 @@ public:
     {
         window.draw(rect);
     }
-
-private:
-    sf::Color color;
-    sf::Vector2f size;
-    sf::Vector2f pos;
 };
 
 class OneWayTile
@@ -37,50 +27,28 @@ class OneWayTile
 public:
     sf::RectangleShape rect;
     sf::RectangleShape rectTop;
-    OneWayTile(
-        sf::Color color,
-        sf::Vector2f size,
-        sf::Vector2f pos)
+
+    OneWayTile(sf::Color color, sf::Vector2f size, sf::Vector2f pos)
     {
-        this->color = color;
-        this->pos = pos;
-        this->size = size;
         rect.setFillColor(color);
         rect.setSize(size);
         rect.setPosition(pos);
+
         rectTop.setSize(sf::Vector2f(rect.getSize().x, 1.0f));
-        rectTop.setPosition(sf::Vector2f(
-            rect.getPosition().x,
-            rect.getPosition().y));
+        rectTop.setPosition(sf::Vector2f(rect.getPosition().x, rect.getPosition().y));
     }
 
     void draw(sf::RenderWindow& window)
     {
         window.draw(rect);
     }
-
-private:
-    sf::Color color;
-    sf::Vector2f size;
-    sf::Vector2f pos;
 };
 
 class Player
 {
 public:
-    Player(
-        float acceleration,
-        float maxSpeed,
-        float gravity,
-        float jumpVelocity,
-        float fallMultiplier,
-        float jumpFallMultiplier,
-        float maxFallSpeed,
-        float coyoteTime,
-        float jumpBufferTime,
-        sf::Color color,
-        sf::Vector2f size,
-        sf::Vector2f pos)
+    Player(float acceleration, float maxSpeed, float gravity, float jumpVelocity, float fallMultiplier, float jumpFallMultiplier,
+        float maxFallSpeed, float coyoteTime, float jumpBufferTime, sf::Color color, sf::Vector2f size, sf::Vector2f pos)
     {
         this->acceleration = acceleration;
         this->maxSpeed = maxSpeed;
@@ -91,32 +59,17 @@ public:
         this->maxFallSpeed = maxFallSpeed;
         this->coyoteTime = coyoteTime;
         this->jumpBufferTime = jumpBufferTime;
-        this->color = color;
-        this->size = size;
-        this->pos = pos;
-        isGrounded = false;
-        holdingSpace = false;
-        coyoteTimeTimer = 0.0f;
-        jumpBufferTimer = 0.0f;
-        direction = sf::Vector2f(0.0f, 0.0f);
+
         rect.setFillColor(color);
         rect.setSize(size);
         rect.setPosition(pos);
         rectBottom.setSize(sf::Vector2f(rect.getSize().x, 1.0f));
-        rectBottom.setPosition(sf::Vector2f(
-            rect.getPosition().x,
-            rect.getPosition().y + rect.getSize().y - 1.0f));
+        rectBottom.setPosition(sf::Vector2f(rect.getPosition().x, rect.getPosition().y + rect.getSize().y - 1.0f));
     }
 
-    void update(
-        sf::RenderWindow& window,
-        float deltaTime,
-        std::vector<SolidTile>& solidTileGroup,
-        std::vector<OneWayTile>& oneWayTileGroup)
+    void update(sf::RenderWindow& window, float deltaTime, std::vector<SolidTile>& solidTileGroup, std::vector<OneWayTile>& oneWayTileGroup)
     {
-        rectBottom.setPosition(sf::Vector2f(
-            rect.getPosition().x,
-            rect.getPosition().y + rect.getSize().y - 1.0f));
+        rectBottom.setPosition(sf::Vector2f(rect.getPosition().x, rect.getPosition().y + rect.getSize().y - 1.0f));
 
         CollisionOneWayTile(oneWayTileGroup);
         horizontalMovement(deltaTime);
@@ -141,33 +94,26 @@ private:
     float maxFallSpeed;
     float coyoteTime;
     float jumpBufferTime;
-    sf::Color color;
-    sf::Vector2f size;
-    sf::Vector2f pos;
-    bool isGrounded;
-    bool holdingSpace;
-    float coyoteTimeTimer;
-    float jumpBufferTimer;
-    sf::Vector2f direction;
+
+    bool isGrounded = false;
+    bool holdingSpace = false;
+    float coyoteTimeTimer = 0.0f;
+    float jumpBufferTimer = 0.0f;
+    sf::Vector2f direction = sf::Vector2f(0.0f, 0.0f);
     sf::RectangleShape rect;
     sf::RectangleShape rectBottom;
 
-    void CollisionOneWayTile(
-        std::vector<OneWayTile>& oneWayTileGroup)
+    void CollisionOneWayTile(std::vector<OneWayTile>& oneWayTileGroup)
     {
         for (auto& tile : oneWayTileGroup)
         {
             if (rectBottom.getGlobalBounds().intersects(tile.rectTop.getGlobalBounds()))
             {
-                if (direction.y > 0.0f &&
-                    !sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+                if (direction.y > 0.0f && !sf::Keyboard::isKeyPressed(sf::Keyboard::S))
                 {
                     isGrounded = true;
                     direction.y = 0.0f;
-                    rect.setPosition(sf::Vector2f(
-                        rect.getPosition().x,
-                        tile.rect.getGlobalBounds().top -
-                        rect.getSize().y));
+                    rect.setPosition(sf::Vector2f(rect.getPosition().x, tile.rect.getGlobalBounds().top - rect.getSize().y));
                 }
             }
         }
@@ -175,8 +121,7 @@ private:
 
     void horizontalMovement(float deltaTime)
     {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) &&
-            sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && sf::Keyboard::isKeyPressed(sf::Keyboard::D))
         {
             if (direction.x > 0.0f)
             {
@@ -227,8 +172,7 @@ private:
         rect.move(sf::Vector2f(direction.x * deltaTime, 0.0f));
     }
 
-    void horizontalCollisionsSolidTile(
-        std::vector<SolidTile>& solidTileGroup)
+    void horizontalCollisionsSolidTile(std::vector<SolidTile>& solidTileGroup)
     {
         for (auto& tile : solidTileGroup)
         {
@@ -237,18 +181,12 @@ private:
                 if (direction.x > 0.0f)
                 {
                     direction.x = 0.0f;
-                    rect.setPosition(sf::Vector2f(
-                        tile.rect.getGlobalBounds().left -
-                        rect.getSize().x,
-                        rect.getPosition().y));
+                    rect.setPosition(sf::Vector2f(tile.rect.getGlobalBounds().left - rect.getSize().x, rect.getPosition().y));
                 }
                 else if (direction.x < 0.0f)
                 {
                     direction.x = 0.0f;
-                    rect.setPosition(sf::Vector2f(
-                        tile.rect.getGlobalBounds().left +
-                        tile.rect.getSize().x,
-                        rect.getPosition().y));
+                    rect.setPosition(sf::Vector2f(tile.rect.getGlobalBounds().left + tile.rect.getSize().x, rect.getPosition().y));
                 }
             }
         }
@@ -267,8 +205,7 @@ private:
             isGrounded = false;
         }
 
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) &&
-            !holdingSpace)
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !holdingSpace)
         {
             jumpBufferTimer = jumpBufferTime;
             holdingSpace = true;
@@ -308,8 +245,7 @@ private:
         rect.move(sf::Vector2f(0, direction.y * deltaTime));
     }
 
-    void verticalCollisionsSolidTile(
-        std::vector<SolidTile>& solidTileGroup)
+    void verticalCollisionsSolidTile(std::vector<SolidTile>& solidTileGroup)
     {
         for (auto& tile : solidTileGroup)
         {
@@ -319,207 +255,101 @@ private:
                 {
                     isGrounded = true;
                     direction.y = 0.0f;
-                    rect.setPosition(sf::Vector2f(
-                        rect.getPosition().x,
-                        tile.rect.getGlobalBounds().top -
-                        rect.getSize().y));
+                    rect.setPosition(sf::Vector2f(rect.getPosition().x, tile.rect.getGlobalBounds().top - rect.getSize().y));
                 }
                 else if (direction.y < 0.0f)
                 {
                     direction.y = 0.0f;
-                    rect.setPosition(sf::Vector2f(
-                        rect.getPosition().x,
-                        tile.rect.getGlobalBounds().top +
-                        tile.rect.getSize().y));
+                    rect.setPosition(sf::Vector2f(rect.getPosition().x, tile.rect.getGlobalBounds().top + tile.rect.getSize().y));
                 }
             }
         }
     }
 
-    void followCamera(
-        float horizontalDeadZone,
-        float verticalDeadZone,
-        sf::RenderWindow& window)
+    void followCamera(float horizontalDeadZone, float verticalDeadZone, sf::RenderWindow& window)
     {
-        if (rect.getPosition().x + rect.getSize().x >
-            window.getView().getCenter().x + horizontalDeadZone)
+        if (rect.getPosition().x + rect.getSize().x > window.getView().getCenter().x + horizontalDeadZone)
         {
-            window.setView(sf::View(sf::FloatRect(
-                rect.getPosition().x + rect.getSize().x -
-                window.getSize().x / 2.0f -
-                horizontalDeadZone,
-                window.getView().getCenter().y -
-                window.getSize().y / 2.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(rect.getPosition().x + rect.getSize().x - window.getSize().x / 2.0f - horizontalDeadZone,
+                window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
         }
-        else if (rect.getPosition().x <
-            window.getView().getCenter().x - horizontalDeadZone)
+        else if (rect.getPosition().x < window.getView().getCenter().x - horizontalDeadZone)
         {
-            window.setView(sf::View(sf::FloatRect(
-                rect.getPosition().x -
-                window.getSize().x / 2.0f +
-                horizontalDeadZone,
-                window.getView().getCenter().y -
-                window.getSize().y / 2.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(rect.getPosition().x - window.getSize().x / 2.0f + horizontalDeadZone,
+                window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
         }
 
-        if (rect.getPosition().y + rect.getSize().y >
-            window.getView().getCenter().y + verticalDeadZone)
+        if (rect.getPosition().y + rect.getSize().y > window.getView().getCenter().y + verticalDeadZone)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x -
-                window.getSize().x / 2.0f,
-                rect.getPosition().y +
-                rect.getSize().y -
-                window.getSize().y / 2.0f -
-                verticalDeadZone,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
+                rect.getPosition().y + rect.getSize().y - window.getSize().y / 2.0f - verticalDeadZone, window.getSize().x, window.getSize().y)));
         }
-        else if (rect.getPosition().y <
-            window.getView().getCenter().y - verticalDeadZone)
+        else if (rect.getPosition().y < window.getView().getCenter().y - verticalDeadZone)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x -
-                window.getSize().x / 2.0f,
-                rect.getPosition().y -
-                window.getSize().y / 2.0f +
-                verticalDeadZone,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
+                rect.getPosition().y - window.getSize().y / 2.0f + verticalDeadZone, window.getSize().x, window.getSize().y)));
         }
     }
 
     void stationaryCamera(sf::RenderWindow& window)
     {
-        if (rect.getPosition().x + rect.getSize().x / 2.0f <
-            window.getView().getCenter().x -
-            window.getSize().x / 2.0f)
+        if (rect.getPosition().x + rect.getSize().x / 2.0f < window.getView().getCenter().x - window.getSize().x / 2.0f)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x -
-                window.getSize().x / 2.0f * 3.0f,
-                window.getView().getCenter().y -
-                window.getSize().y / 2.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f * 3.0f,
+                window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
         }
-        else if (rect.getPosition().x + rect.getSize().x / 2.0f >
-            window.getView().getCenter().x +
-            window.getSize().x / 2.0f)
+        else if (rect.getPosition().x + rect.getSize().x / 2.0f > window.getView().getCenter().x + window.getSize().x / 2.0f)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x +
-                window.getSize().x / 2.0f * 3.0f,
-                window.getView().getCenter().y +
-                window.getSize().y / 2.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x + window.getSize().x / 2.0f * 3.0f,
+                window.getView().getCenter().y + window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
         }
-        else if (rect.getPosition().y + rect.getSize().y / 2.0f <
-            window.getView().getCenter().y -
-            window.getSize().y / 2.0f)
+        else if (rect.getPosition().y + rect.getSize().y / 2.0f < window.getView().getCenter().y - window.getSize().y / 2.0f)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x +
-                window.getSize().x / 2.0f,
-                window.getView().getCenter().y -
-                window.getSize().y / 2.0f * 3.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x + window.getSize().x / 2.0f,
+                window.getView().getCenter().y - window.getSize().y / 2.0f * 3.0f, window.getSize().x, window.getSize().y)));
         }
-        else if (rect.getPosition().y + rect.getSize().y / 2.0f >
-            window.getView().getCenter().y +
-            window.getSize().y / 2.0f)
+        else if (rect.getPosition().y + rect.getSize().y / 2.0f > window.getView().getCenter().y + window.getSize().y / 2.0f)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x -
-                window.getSize().x / 2.0f,
-                window.getView().getCenter().y +
-                window.getSize().y / 2.0f * 3.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
+                window.getView().getCenter().y + window.getSize().y / 2.0f * 3.0f, window.getSize().x, window.getSize().y)));
         }
     }
 
     void horizontalCamera(sf::RenderWindow& window)
     {
-        if (rect.getPosition().y + rect.getSize().y / 2.0f <
-            window.getView().getCenter().y -
-            window.getSize().y / 2.0f)
+        if (rect.getPosition().y + rect.getSize().y / 2.0f < window.getView().getCenter().y - window.getSize().y / 2.0f)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x +
-                window.getSize().x / 2.0f,
-                window.getView().getCenter().y -
-                window.getSize().y / 2.0f * 3.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x + window.getSize().x / 2.0f,
+                window.getView().getCenter().y - window.getSize().y / 2.0f * 3.0f, window.getSize().x, window.getSize().y)));
         }
-        else if (rect.getPosition().y + rect.getSize().y / 2.0f >
-            window.getView().getCenter().y +
-            window.getSize().y / 2.0f)
+        else if (rect.getPosition().y + rect.getSize().y / 2.0f > window.getView().getCenter().y + window.getSize().y / 2.0f)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x -
-                window.getSize().x / 2.0f,
-                window.getView().getCenter().y +
-                window.getSize().y / 2.0f * 3.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
+                window.getView().getCenter().y + window.getSize().y / 2.0f * 3.0f, window.getSize().x, window.getSize().y)));
         }
         else
         {
-            window.setView(sf::View(sf::FloatRect(
-                rect.getPosition().x +
-                rect.getSize().x / 2.0f -
-                window.getSize().x / 2.0f,
-                window.getView().getCenter().y -
-                window.getSize().y / 2.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(rect.getPosition().x + rect.getSize().x / 2.0f - window.getSize().x / 2.0f,
+                window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
         }
     }
 
     void verticalCamera(sf::RenderWindow& window)
     {
-        if (rect.getPosition().x + rect.getSize().x / 2.0f <
-            window.getView().getCenter().x -
-            window.getSize().x / 2.0f)
+        if (rect.getPosition().x + rect.getSize().x / 2.0f < window.getView().getCenter().x - window.getSize().x / 2.0f)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x -
-                window.getSize().x / 2.0f * 3.0f,
-                window.getView().getCenter().y -
-                window.getSize().y / 2.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f * 3.0f,
+                window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
         }
-        else if (rect.getPosition().x + rect.getSize().x / 2.0f >
-            window.getView().getCenter().x +
-            window.getSize().x / 2.0f)
+        else if (rect.getPosition().x + rect.getSize().x / 2.0f > window.getView().getCenter().x + window.getSize().x / 2.0f)
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x +
-                window.getSize().x / 2.0f * 3.0f,
-                window.getView().getCenter().y +
-                window.getSize().y / 2.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x + window.getSize().x / 2.0f * 3.0f,
+                window.getView().getCenter().y + window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
         }
         else
         {
-            window.setView(sf::View(sf::FloatRect(
-                window.getView().getCenter().x -
-                window.getSize().x / 2.0f,
-                rect.getPosition().y +
-                rect.getSize().y / 2.0f -
-                window.getSize().y / 2.0f,
-                window.getSize().x,
-                window.getSize().y)));
+            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
+                rect.getPosition().y + rect.getSize().y / 2.0f - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
         }
     }
 
@@ -529,10 +359,7 @@ private:
     }
 };
 
-void loadLevel(
-    std::string map,
-    std::vector<Player>& playerGroup,
-    std::vector<SolidTile>& solidTileGroup,
+void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<SolidTile>& solidTileGroup,
     std::vector<OneWayTile>& oneWayTileGroup)
 {
     std::ifstream file(map);
@@ -541,35 +368,26 @@ void loadLevel(
     float x;
     float y;
 
-    float collom_index = 0.0f;
+    float column_index = 0.0f;
 
     while (std::getline(file, line))
     {
         for (float row_index = 0.0f; row_index < line.length(); row_index++)
         {
             x = row_index * 36.0f;
-            y = collom_index * 36.0f;
+            y = column_index * 36.0f;
 
             if (line[row_index] == 't') // t - tile
             {
-                solidTileGroup.push_back(SolidTile(
-                    sf::Color(0.0f, 0.0f, 0.0f),
-                    sf::Vector2f(36.0f, 36.0f),
-                    sf::Vector2f(x, y)));
+                solidTileGroup.push_back(SolidTile(sf::Color(0.0f, 0.0f, 0.0f), sf::Vector2f(36.0f, 36.0f), sf::Vector2f(x, y)));
             }
             else if (line[row_index] == 's') // s - small tile
             {
-                solidTileGroup.push_back(SolidTile(
-                    sf::Color(0, 0, 0),
-                    sf::Vector2f(36.0f, 9.0f),
-                    sf::Vector2f(x, y)));
+                solidTileGroup.push_back(SolidTile(sf::Color(0, 0, 0), sf::Vector2f(36.0f, 9.0f), sf::Vector2f(x, y)));
             }
             else if (line[row_index] == 'o') // o - one way tile
             {
-                oneWayTileGroup.push_back(OneWayTile(
-                    sf::Color(139.0f, 69.0f, 19.0f),
-                    sf::Vector2f(36.0f, 9.0f),
-                    sf::Vector2f(x, y)));
+                oneWayTileGroup.push_back(OneWayTile(sf::Color(139.0f, 69.0f, 19.0f), sf::Vector2f(36.0f, 9.0f), sf::Vector2f(x, y)));
             }
             else if (line[row_index] == 'p') // p - player
             {
@@ -588,7 +406,7 @@ void loadLevel(
                     sf::Vector2f(x, y)));       // player pos
             }
         }
-        collom_index++;
+        column_index++;
     }
 }
 
@@ -598,23 +416,15 @@ int main()
     int winWidth = 1260;
     int winHeight = 900;
 
-    sf::RenderWindow window(
-        sf::VideoMode(winWidth, winHeight),
-        winTitle,
-        sf::Style::Close);
-    window.setPosition(sf::Vector2i(
-        sf::VideoMode::getDesktopMode().width / 2 - winWidth / 2,
+    sf::RenderWindow window(sf::VideoMode(winWidth, winHeight), winTitle, sf::Style::Close);
+    window.setPosition(sf::Vector2i(sf::VideoMode::getDesktopMode().width / 2 - winWidth / 2,
         sf::VideoMode::getDesktopMode().height / 2 - winHeight / 2));
 
     std::vector<Player> playerGroup;
     std::vector<SolidTile> solidTileGroup;
     std::vector<OneWayTile> oneWayTileGroup;
 
-    loadLevel(
-        std::string("map.txt"),
-        playerGroup,
-        solidTileGroup,
-        oneWayTileGroup);
+    loadLevel(std::string("map.txt"), playerGroup, solidTileGroup, oneWayTileGroup);
 
     sf::Clock clock;
     float deltaTime;
@@ -625,8 +435,7 @@ int main()
 
         while (window.pollEvent(event))
         {
-            if (event.type == sf::Event::Closed ||
-                sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
+            if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
             {
                 window.close();
             }
@@ -637,11 +446,7 @@ int main()
 
         for (auto& player : playerGroup)
         {
-            player.update(
-                window,
-                deltaTime,
-                solidTileGroup,
-                oneWayTileGroup);
+            player.update(window, deltaTime, solidTileGroup, oneWayTileGroup);
         }
 
         // draw
