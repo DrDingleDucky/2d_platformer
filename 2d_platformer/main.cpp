@@ -365,7 +365,7 @@ void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<So
             else if (line[row_index] == 'p') // p - player
             {
                 playerGroup.push_back(Player(
-                    1000.0f,                    // player acceleration
+                    3500.0f,                    // player acceleration
                     405.0f,                     // player max speed
                     2175.0f,                    // player gravity
                     -850.0f,                    // player jump velocity
@@ -374,7 +374,7 @@ void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<So
                     1085.0f,                    // player max fall speed
                     0.1f,                       // player coyote time
                     0.12f,                      // player jump buffer time
-                    sf::Color(255, 255, 255),           // player color
+                    sf::Color(255, 255, 255),   // player color
                     sf::Vector2f(36.0f, 72.0f), // player size
                     sf::Vector2f(x, y)));       // player pos
             }
