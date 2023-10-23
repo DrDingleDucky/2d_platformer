@@ -1,1 +1,3 @@
-# 2d_platformer
+# 2D Platformer
+
+2D platformer using SFML.
