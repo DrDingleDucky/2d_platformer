@@ -1,339 +1,11 @@
+#include "player.h"
 #include <fstream>
 #include <iostream>
 #include <sfml/Graphics.hpp>
 #include <string>
 #include <vector>
 
-class SolidTile
-{
-public:
-    sf::RectangleShape rect;
-
-    SolidTile(sf::Color color, sf::Vector2f size, sf::Vector2f pos)
-    {
-        rect.setFillColor(color);
-        rect.setSize(size);
-        rect.setPosition(pos);
-    }
-
-    void draw(sf::RenderWindow& window)
-    {
-        window.draw(rect);
-    }
-};
-
-class OneWayTile
-{
-public:
-    sf::RectangleShape rect;
-    sf::RectangleShape rectTop;
-
-    OneWayTile(sf::Color color, sf::Vector2f size, sf::Vector2f pos)
-    {
-        rect.setFillColor(color);
-        rect.setSize(size);
-        rect.setPosition(pos);
-        rectTop.setSize(sf::Vector2f(rect.getSize().x, 1.0f));
-        rectTop.setPosition(sf::Vector2f(rect.getPosition().x, rect.getPosition().y));
-    }
-
-    void draw(sf::RenderWindow& window)
-    {
-        window.draw(rect);
-    }
-};
-
-class Player
-{
-public:
-    Player(float acceleration, float maxSpeed, float gravity, float jumpVelocity, float fallMultiplier, float jumpFallMultiplier,
-           float maxFallSpeed, float coyoteTime, float jumpBufferTime, sf::Color color, sf::Vector2f size, sf::Vector2f pos)
-    {
-        this->acceleration = acceleration;
-        this->maxSpeed = maxSpeed;
-        this->gravity = gravity;
-        this->jumpVelocity = jumpVelocity;
-        this->fallMultiplier = fallMultiplier;
-        this->jumpFallMultiplier = jumpFallMultiplier;
-        this->maxFallSpeed = maxFallSpeed;
-        this->coyoteTime = coyoteTime;
-        this->jumpBufferTime = jumpBufferTime;
-
-        rect.setFillColor(color);
-        rect.setSize(size);
-        rect.setPosition(pos);
-        rectBottom.setSize(sf::Vector2f(rect.getSize().x, 1.0f));
-        rectBottom.setPosition(sf::Vector2f(rect.getPosition().x, rect.getPosition().y + rect.getSize().y - 1.0f));
-    }
-
-    void update(sf::RenderWindow& window, float deltaTime, std::vector<SolidTile>& solidTileGroup, std::vector<OneWayTile>& oneWayTileGroup)
-    {
-        rectBottom.setPosition(sf::Vector2f(rect.getPosition().x, rect.getPosition().y + rect.getSize().y - 1.0f));
-
-        collisionOneWayTile(oneWayTileGroup);
-        horizontalMovement(deltaTime);
-        horizontalCollisionsSolidTile(solidTileGroup);
-        verticalMovement(deltaTime);
-        verticalCollisionsSolidTile(solidTileGroup);
-        camera(window);
-    }
-
-    void draw(sf::RenderWindow& window)
-    {
-        window.draw(rect);
-    }
-
-private:
-    float acceleration;
-    float maxSpeed;
-    float gravity;
-    float jumpVelocity;
-    float fallMultiplier;
-    float jumpFallMultiplier;
-    float maxFallSpeed;
-    float coyoteTime;
-    float jumpBufferTime;
-
-    bool isGrounded = false;
-    bool holdingSpace = false;
-    float coyoteTimeTimer = 0.0f;
-    float jumpBufferTimer = 0.0f;
-    sf::Vector2f direction = sf::Vector2f(0.0f, 0.0f);
-    sf::RectangleShape rect;
-    sf::RectangleShape rectBottom;
-
-    void collisionOneWayTile(std::vector<OneWayTile>& oneWayTileGroup)
-    {
-        for (auto& tile : oneWayTileGroup)
-        {
-            if (rectBottom.getGlobalBounds().intersects(tile.rectTop.getGlobalBounds()))
-            {
-                if (direction.y > 0.0f && !sf::Keyboard::isKeyPressed(sf::Keyboard::S))
-                {
-                    isGrounded = true;
-                    direction.y = 0.0f;
-                    rect.setPosition(sf::Vector2f(rect.getPosition().x, tile.rect.getGlobalBounds().top - rect.getSize().y));
-                }
-            }
-        }
-    }
-
-    void horizontalMovement(float deltaTime)
-    {
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A) && !sf::Keyboard::isKeyPressed(sf::Keyboard::D))
-        {
-            direction.x -= acceleration * deltaTime;
-        }
-        else if (sf::Keyboard::isKeyPressed(sf::Keyboard::D) && !sf::Keyboard::isKeyPressed(sf::Keyboard::A))
-        {
-            direction.x += acceleration * deltaTime;
-        }
-        else
-        {
-            int sign = direction.x > 0 ? -1 : 1;
-
-            if (sign * direction.x < 0.0f)
-            {
-                direction.x += sign * acceleration * deltaTime;
-                if (sign * direction.x > 0.0f)
-                {
-                    direction.x = 0.0f;
-                }
-            }
-        }
-
-        direction.x = std::clamp(direction.x, -maxSpeed, maxSpeed);
-        rect.move(sf::Vector2f(direction.x * deltaTime, 0.0f));
-    }
-
-    void horizontalCollisionsSolidTile(std::vector<SolidTile>& solidTileGroup)
-    {
-        for (auto& tile : solidTileGroup)
-        {
-            if (rect.getGlobalBounds().intersects(tile.rect.getGlobalBounds()))
-            {
-                if (direction.x > 0.0f)
-                {
-                    direction.x = 0.0f;
-                    rect.setPosition(sf::Vector2f(tile.rect.getGlobalBounds().left - rect.getSize().x, rect.getPosition().y));
-                }
-                else if (direction.x < 0.0f)
-                {
-                    direction.x = 0.0f;
-                    rect.setPosition(sf::Vector2f(tile.rect.getGlobalBounds().left + tile.rect.getSize().x, rect.getPosition().y));
-                }
-            }
-        }
-    }
-
-    void verticalMovement(float deltaTime)
-    {
-        if (jumpBufferTimer > 0.0f && coyoteTimeTimer > 0.0f)
-        {
-            direction.y = jumpVelocity;
-            coyoteTimeTimer = 0.0f;
-            isGrounded = false;
-        }
-        else if (direction.y > 0.0f && isGrounded)
-        {
-            isGrounded = false;
-        }
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && !holdingSpace)
-        {
-            jumpBufferTimer = jumpBufferTime;
-            holdingSpace = true;
-        }
-        else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
-        {
-            holdingSpace = false;
-        }
-
-        jumpBufferTimer -= deltaTime;
-
-        if (isGrounded)
-        {
-            coyoteTimeTimer = coyoteTime;
-        }
-
-        coyoteTimeTimer -= deltaTime;
-
-        if (direction.y > maxFallSpeed)
-        {
-            direction.y = maxFallSpeed;
-        }
-        else if (direction.y > 0.0f)
-        {
-            direction.y += gravity * fallMultiplier * deltaTime;
-        }
-        else if (!sf::Keyboard::isKeyPressed(sf::Keyboard::Space) && direction.y < 0.0f)
-        {
-            direction.y += gravity * jumpFallMultiplier * deltaTime;
-        }
-        else
-        {
-            direction.y += gravity * deltaTime;
-        }
-
-        rect.move(sf::Vector2f(0, direction.y * deltaTime));
-    }
-
-    void verticalCollisionsSolidTile(std::vector<SolidTile>& solidTileGroup)
-    {
-        for (auto& tile : solidTileGroup)
-        {
-            if (rect.getGlobalBounds().intersects(tile.rect.getGlobalBounds()))
-            {
-                if (direction.y > 0.0f)
-                {
-                    isGrounded = true;
-                    direction.y = 0.0f;
-                    rect.setPosition(sf::Vector2f(rect.getPosition().x, tile.rect.getGlobalBounds().top - rect.getSize().y));
-                }
-                else if (direction.y < 0.0f)
-                {
-                    direction.y = 0.0f;
-                    rect.setPosition(sf::Vector2f(rect.getPosition().x, tile.rect.getGlobalBounds().top + tile.rect.getSize().y));
-                }
-            }
-        }
-    }
-
-    void followCamera(float horizontalDeadZone, float verticalDeadZone, sf::RenderWindow& window)
-    {
-        if (rect.getPosition().x + rect.getSize().x > window.getView().getCenter().x + horizontalDeadZone)
-        {
-            window.setView(sf::View(sf::FloatRect(rect.getPosition().x + rect.getSize().x - window.getSize().x / 2.0f - horizontalDeadZone,
-                                                  window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
-        }
-        else if (rect.getPosition().x < window.getView().getCenter().x - horizontalDeadZone)
-        {
-            window.setView(sf::View(sf::FloatRect(rect.getPosition().x - window.getSize().x / 2.0f + horizontalDeadZone,
-                                                  window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
-        }
-
-        if (rect.getPosition().y + rect.getSize().y > window.getView().getCenter().y + verticalDeadZone)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
-                                                  rect.getPosition().y + rect.getSize().y - window.getSize().y / 2.0f - verticalDeadZone, window.getSize().x, window.getSize().y)));
-        }
-        else if (rect.getPosition().y < window.getView().getCenter().y - verticalDeadZone)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
-                                                  rect.getPosition().y - window.getSize().y / 2.0f + verticalDeadZone, window.getSize().x, window.getSize().y)));
-        }
-    }
-
-    void stationaryCamera(sf::RenderWindow& window)
-    {
-        if (rect.getPosition().x + rect.getSize().x / 2.0f < window.getView().getCenter().x - window.getSize().x / 2.0f)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f * 3.0f,
-                                                  window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
-        }
-        else if (rect.getPosition().x + rect.getSize().x / 2.0f > window.getView().getCenter().x + window.getSize().x / 2.0f)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x + window.getSize().x / 2.0f * 3.0f,
-                                                  window.getView().getCenter().y + window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
-        }
-        else if (rect.getPosition().y + rect.getSize().y / 2.0f < window.getView().getCenter().y - window.getSize().y / 2.0f)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x + window.getSize().x / 2.0f,
-                                                  window.getView().getCenter().y - window.getSize().y / 2.0f * 3.0f, window.getSize().x, window.getSize().y)));
-        }
-        else if (rect.getPosition().y + rect.getSize().y / 2.0f > window.getView().getCenter().y + window.getSize().y / 2.0f)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
-                                                  window.getView().getCenter().y + window.getSize().y / 2.0f * 3.0f, window.getSize().x, window.getSize().y)));
-        }
-    }
-
-    void horizontalCamera(sf::RenderWindow& window)
-    {
-        if (rect.getPosition().y + rect.getSize().y / 2.0f < window.getView().getCenter().y - window.getSize().y / 2.0f)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x + window.getSize().x / 2.0f,
-                                                  window.getView().getCenter().y - window.getSize().y / 2.0f * 3.0f, window.getSize().x, window.getSize().y)));
-        }
-        else if (rect.getPosition().y + rect.getSize().y / 2.0f > window.getView().getCenter().y + window.getSize().y / 2.0f)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
-                                                  window.getView().getCenter().y + window.getSize().y / 2.0f * 3.0f, window.getSize().x, window.getSize().y)));
-        }
-        else
-        {
-            window.setView(sf::View(sf::FloatRect(rect.getPosition().x + rect.getSize().x / 2.0f - window.getSize().x / 2.0f,
-                                                  window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
-        }
-    }
-
-    void verticalCamera(sf::RenderWindow& window)
-    {
-        if (rect.getPosition().x + rect.getSize().x / 2.0f < window.getView().getCenter().x - window.getSize().x / 2.0f)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f * 3.0f,
-                                                  window.getView().getCenter().y - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
-        }
-        else if (rect.getPosition().x + rect.getSize().x / 2.0f > window.getView().getCenter().x + window.getSize().x / 2.0f)
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x + window.getSize().x / 2.0f * 3.0f,
-                                                  window.getView().getCenter().y + window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
-        }
-        else
-        {
-            window.setView(sf::View(sf::FloatRect(window.getView().getCenter().x - window.getSize().x / 2.0f,
-                                                  rect.getPosition().y + rect.getSize().y / 2.0f - window.getSize().y / 2.0f, window.getSize().x, window.getSize().y)));
-        }
-    }
-
-    void camera(sf::RenderWindow& window)
-    {
-        horizontalCamera(window);
-    }
-};
-
-void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<SolidTile>& solidTileGroup, std::vector<OneWayTile>& oneWayTileGroup)
-{
+void loadLevel(std::string map, std::vector<Player> &playerGroup, std::vector<SolidTile> &solidTileGroup, std::vector<OneWayTile> &oneWayTileGroup) {
     std::ifstream file(map);
     std::string line;
 
@@ -342,26 +14,21 @@ void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<So
 
     unsigned int column_index = 0;
 
-    while (std::getline(file, line))
-    {
-        for (unsigned int row_index = 0; row_index < line.length(); row_index++)
-        {
+    while (std::getline(file, line)) {
+        for (unsigned int row_index = 0; row_index < line.length(); row_index++) {
             x = row_index * 36.0f;
             y = column_index * 36.0f;
 
             if (line[row_index] == 't') // t - tile
             {
                 solidTileGroup.push_back(SolidTile(sf::Color(0, 0, 0), sf::Vector2f(36.0f, 36.0f), sf::Vector2f(x, y)));
-            }
-            else if (line[row_index] == 's') // s - small tile
+            } else if (line[row_index] == 's') // s - small tile
             {
                 solidTileGroup.push_back(SolidTile(sf::Color(0, 0, 0), sf::Vector2f(36.0f, 9.0f), sf::Vector2f(x, y)));
-            }
-            else if (line[row_index] == 'o') // o - one way tile
+            } else if (line[row_index] == 'o') // o - one way tile
             {
                 oneWayTileGroup.push_back(OneWayTile(sf::Color(139, 69, 19), sf::Vector2f(36.0f, 9.0f), sf::Vector2f(x, y)));
-            }
-            else if (line[row_index] == 'p') // p - player
+            } else if (line[row_index] == 'p') // p - player
             {
                 playerGroup.push_back(Player(
                     3500.0f,                    // player acceleration
@@ -382,8 +49,7 @@ void loadLevel(std::string map, std::vector<Player>& playerGroup, std::vector<So
     }
 }
 
-int main()
-{
+int main() {
     std::string winTitle = "sfml platformer";
     int winWidth = 1260;
     int winHeight = 900;
@@ -400,41 +66,29 @@ int main()
     sf::Clock clock;
     float deltaTime;
 
-    while (window.isOpen())
-    {
+    while (window.isOpen()) {
         sf::Event event;
 
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
-            {
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed || sf::Keyboard::isKeyPressed(sf::Keyboard::Escape)) {
                 window.close();
             }
         }
-
-        // update
         deltaTime = clock.restart().asSeconds();
 
-        for (auto& player : playerGroup)
-        {
+        for (auto &player : playerGroup) {
             player.update(window, deltaTime, solidTileGroup, oneWayTileGroup);
         }
 
-        // draw
         window.clear(sf::Color(64, 64, 64));
 
-        for (auto& tile : solidTileGroup)
-        {
+        for (auto &tile : solidTileGroup) {
             tile.draw(window);
         }
-
-        for (auto& tile : oneWayTileGroup)
-        {
+        for (auto &tile : oneWayTileGroup) {
             tile.draw(window);
         }
-
-        for (auto& player : playerGroup)
-        {
+        for (auto &player : playerGroup) {
             player.draw(window);
         }
 

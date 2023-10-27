@@ -140,9 +140,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="one_way_tile.cpp" />
+    <ClCompile Include="player.cpp" />
+    <ClCompile Include="solid_tile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="map.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="one_way_tile.h" />
+    <ClInclude Include="player.h" />
+    <ClInclude Include="solid_tile.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
