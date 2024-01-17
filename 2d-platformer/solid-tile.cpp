@@ -1,4 +1,4 @@
-#include "solid_tile.h"
+#include "solid-tile.h"
 
 SolidTile::SolidTile(sf::Color color, sf::Vector2f size, sf::Vector2f pos) {
     rect.setFillColor(color);

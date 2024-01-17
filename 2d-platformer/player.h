@@ -1,8 +1,8 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
-#include "one_way_tile.h"
-#include "solid_tile.h"
+#include "one-way-tile.h"
+#include "solid-tile.h"
 #include <sfml/Graphics.hpp>
 #include <vector>
 

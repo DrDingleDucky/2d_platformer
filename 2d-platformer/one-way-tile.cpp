@@ -1,4 +1,4 @@
-#include "one_way_tile.h"
+#include "one-way-tile.h"
 
 OneWayTile::OneWayTile(sf::Color color, sf::Vector2f size, sf::Vector2f pos) {
     rect.setFillColor(color);
