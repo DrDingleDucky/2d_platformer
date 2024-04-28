@@ -2,4 +2,4 @@
 
 2D platformer using SFML.
 
-![platformer.png](README.assets/platformer.png)
+![platformer.gif](README.assets/platformer.gif)
