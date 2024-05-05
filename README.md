@@ -1,4 +1,4 @@
-# 2D Platformer
+# Platformer
 
 2D platformer using SFML.
 
